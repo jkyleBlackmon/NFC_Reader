@@ -15,6 +15,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace acr122_demo
 {
+   
     public partial class RetroLauncher : Form
     {
         private static MyACR122U acr122u = new MyACR122U();
@@ -22,13 +23,12 @@ namespace acr122_demo
         //[System.Runtime.InteropServices.DllImport("User32.dll")]
         //private static extern bool SetForegroundWindow(IntPtr handle);
 
-        private IntPtr handle;
 
+        static List<GameViewModel> games = new List<GameViewModel>();
         static List<string> ids = new List<string>();
         static List<string> emus = new List<string>();
         static List<string> cores = new List<string>();
         static List<string> roms = new List<string>();
-
 
         static Process retroarchProcess;
 
@@ -60,21 +60,29 @@ namespace acr122_demo
                     {
                         var line = reader.ReadLine();
                         var values = line.Split(',');
-
+                        var name = values[3].Substring(values[3].LastIndexOf("\\")+1, values[3].Length - (values[3].LastIndexOf("\\") + 1));
+                        Console.WriteLine("Name: " + name);
+                        var gm = new GameViewModel(values[0], name, values[1], values[2], values[3]);
+                        games.Add(gm);
                         ids.Add(values[0]);
                         emus.Add(values[1]);
                         cores.Add(values[2]);
                         roms.Add(values[3]);
                     }
+                    Console.WriteLine("ROMS LOADED: ", games);
+                    listBox1.DisplayMember = "Name";
+                    listBox1.ValueMember = "Id";
+                    listBox1.DataSource = games;
+                    listBox1.SelectedIndexChanged += listBox1_SelectedIndexChanged;
                 }
             else
             {
                 MessageBox.Show(this, "No mapping.txt found. Please create a mapping.txt in the format:\n[ID],[Path To Emulator],[Path To Core],[Path To Rom]", "No mapping.txt found", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            for (int i = 0; i < cores.Count; i++)
+            for (int i = 0; i < games.Count; i++)
             {
-                Console.WriteLine(ids[i] + cores[i] + roms[i]);
+                Console.WriteLine(games[i].Id + games[i].Core + games[i].Rom);
             }
 
         }
@@ -84,8 +92,6 @@ namespace acr122_demo
             acr122u.ReadId = BitConverter.ToString(acr122u.GetUID(reader)).Replace("-", "");
             Console.WriteLine("Unique ID: " + acr122u.ReadId);
             LoadRom(acr122u.ReadId);
-
-
         }
 
         //[DllImport("user32.dll")]
@@ -94,16 +100,15 @@ namespace acr122_demo
 
         private static void LoadRom(string id)
         {
-
-
-
             if (ids.Contains(id))
             {
                 Console.WriteLine("Loading  " + roms[ids.IndexOf(id)]);
 
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.FileName = GetEmuName(id);
+                Console.WriteLine(startInfo.FileName);
                 startInfo.Arguments = "-f -L \"" + GetCoreName(id) + "\" \"" + GetRomName(id) + "\"";
+                Console.WriteLine("Arguments: " + startInfo.Arguments);
                 retroarchProcess = Process.Start(startInfo);
                 System.Threading.Thread.Sleep(2000);
                 // ShowWindow(retroarchProcess.MainWindowHandle, 9);
@@ -177,6 +182,28 @@ namespace acr122_demo
         {
 
         }
+
+        private void label5_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (listBox1.SelectedIndex == -1) return;
+            Console.WriteLine("ListBox Index Selected: ", sender.ToString());
+            LoadRom(listBox1.SelectedValue.ToString());
+        }
+
+        private void groupBox1_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void groupBox2_Enter(object sender, EventArgs e)
+        {
+
+        }
     }
 
     internal class MyACR122U : ACR122U
@@ -191,6 +218,24 @@ namespace acr122_demo
         public MyACR122U()
         {
 
+        }
+    }
+
+    internal class GameViewModel
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Emulator { get; set; }
+        public string Core { get; set; }
+        public string Rom { get; set; }
+
+        public GameViewModel(string id, string name, string emulator, string core, string rom)
+        {
+            this.Id = id;
+            this.Name = name;
+            this.Emulator = emulator;
+            this.Core = core;
+            this.Rom = rom;
         }
     }
 }
