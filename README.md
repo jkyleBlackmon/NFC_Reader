@@ -14,7 +14,7 @@ To install RetroEmu please follow the instructions below:
 2. Open Project Solution in Visual Studio
 3. Build the solution for Release, any CPU
 4. Copy the contents of the `RetroEmu\bin\Release` folder to your desired location
-5 (optional). Create shortcuts to the `RetroEmu.exe` and  `mapping.txt` files
+5. (optional) Create shortcuts to the `RetroEmu.exe` and  `mapping.txt` files
 6. Run `RetroEmu.exe` and enjoy!
 
 ## Mapping NFC Tags to Games
